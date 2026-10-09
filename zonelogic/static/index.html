@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#172d2c">
+  <title>ZoneLogic · Visual rules, real events</title>
+  <link rel="stylesheet" href="static/styles.css">
+  <script src="static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to workspace</a>
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="ZoneLogic home"><span class="brand-mark" aria-hidden="true">Z<span>·</span></span><span>ZoneLogic<small>SPATIAL EVENT ENGINE</small></span></a>
+    <nav aria-label="Main navigation"><a class="nav-active" href="#workspace">Workspace</a><a href="#incident-section">Incidents <span id="nav-count">0</span></a></nav>
+    <div class="connection"><span class="status-dot" id="connection-dot"></span><span id="connection-label">Connecting…</span></div>
+  </header>
+
+  <main id="workspace">
+    <section class="page-heading" aria-labelledby="page-title"><div><div class="eyebrow">YOUR SPACE. YOUR RULES.</div><h1 id="page-title">Turn a place into a trigger.</h1><p>Choose a source, mark a zone, and define what matters.</p></div><a class="button secondary export" href="api/incidents/export" download>↓ <span>Export incidents</span></a></section>
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <div class="workspace-grid">
+      <aside class="panel sources-panel" aria-labelledby="sources-heading">
+        <div class="panel-heading"><h2 id="sources-heading">Sources</h2><span class="small-counter" id="source-count">—</span></div>
+        <p class="panel-intro">One view. Any use case.</p>
+        <div id="sources" class="source-list"><p class="empty">Loading available sources…</p></div>
+        <div class="source-divider"></div>
+        <details class="import-section"><summary><span class="inline-icon">↥</span> Upload a recording</summary>
+          <form id="upload-form" class="stack-form"><label>Source name<input name="name" placeholder="North entrance" maxlength="100" required></label><label>Video file<input name="video" type="file" accept="video/*" required></label><label>Detection JSON<input name="detections" type="file" accept=".json,application/json" required></label><p class="help">Use timestamped detections from your model. Boxes use normalized coordinates from 0 to 1.</p><button class="button secondary" type="submit">Add source</button></form>
+        </details>
+        <details class="import-section"><summary><span class="inline-icon">▦</span> VAST video catalog</summary>
+          <form id="catalog-form" class="stack-form"><label>Location<input id="catalog-location" value="warehouse3" placeholder="warehouse3" required></label><button class="button secondary" type="submit">Browse videos</button></form><div id="catalog-results" class="catalog-results"></div><p class="help" id="vast-help">Checking VAST connection…</p>
+        </details>
+        <div class="sidebar-note"><span aria-hidden="true">◇</span><p><strong>Start with a simulation.</strong>Try the complete rule workflow with generated detections. Upload a recording when you’re ready.</p></div>
+      </aside>
+
+      <section class="monitor-column" aria-labelledby="monitor-heading">
+        <div class="panel monitor-panel">
+          <div class="panel-heading monitor-heading"><div><span class="eyebrow" id="source-kind">SOURCE</span><h2 id="monitor-heading">Loading workspace…</h2></div><span id="mode-badge" class="badge simulation">SIMULATION</span></div>
+          <div class="stage-wrap"><div class="stage" id="stage"><video id="video" playsinline preload="metadata" muted hidden></video><canvas id="scene" width="1280" height="720" aria-label="Source visualization"></canvas><canvas id="overlay" width="1280" height="720" tabindex="0" aria-label="Zone editor. Activate Draw zone, then click to add vertices or use arrow keys and Space. Press Enter to finish or Escape to cancel."></canvas><div class="stage-caption" id="stage-caption">GENERATED SCENE · NO CAMERA FOOTAGE</div><div class="stage-error" id="stage-error" hidden></div></div></div>
+          <div class="playback"><button class="play-button" id="play-button" type="button" aria-label="Play source" disabled>▶</button><button class="icon-button" id="reset-button" type="button" title="Restart and reset rule timers" aria-label="Restart and reset rule timers" disabled>↺</button><span class="time" id="current-time">00:00</span><input id="timeline" aria-label="Playback position" type="range" min="0" max="30" step="0.1" value="0" disabled><span class="time" id="duration">00:00</span><span class="playback-state" id="playback-state">PAUSED</span></div>
+          <div class="monitor-footer"><span><i class="legend-dot zone-dot"></i> Zone boundary</span><span><i class="legend-dot object-dot"></i> Object detection</span><span id="detection-count">0 objects</span></div>
+        </div>
+        <div class="panel zone-panel"><div class="panel-heading"><div><span class="step-label">01</span><h2>Define your zones</h2></div><button class="button small secondary" id="draw-button" type="button" disabled>＋ Draw zone</button></div><div id="draw-toolbar" class="draw-toolbar" hidden><label class="zone-name-label">Zone name<input id="zone-name" value="New zone" maxlength="80"></label><span id="draw-count">0 points</span><button class="button small secondary" id="undo-point" type="button">Undo</button><button class="button small primary" id="finish-zone" type="button">Finish</button><button class="text-button" id="cancel-zone" type="button">Cancel</button><p class="help">Click around the area. Add at least 3 points, then finish. Keyboard: arrows move the cursor, Space adds a point, Enter finishes, Escape cancels.</p></div><div id="zone-list" class="zone-list"><p class="empty">Zones will appear here.</p></div><p class="panel-footnote" id="source-description">Zones and rules are saved separately for each source.</p></div>
+        <div class="workflow-note"><span class="note-number">↳</span><p><strong>From pixels to something actionable.</strong> Detections describe objects. Your zones and rules decide when to create an incident.</p></div>
+      </section>
+
+      <aside class="panel rule-panel" aria-labelledby="rule-heading">
+        <div class="panel-heading"><div><span class="step-label">02</span><h2 id="rule-heading">Set the logic</h2></div><button class="text-button" id="new-rule" type="button" disabled>＋ New</button></div>
+        <div id="rule-list" class="rule-list"></div>
+        <div class="preset-row"><button type="button" data-preset="accessibility" class="preset">↗ Accessibility</button><button type="button" data-preset="waste" class="preset">♧ Waste candidate</button></div>
+        <form id="rule-form" class="stack-form rule-form">
+          <label>Rule name<input id="rule-name" name="name" placeholder="Keep the access route clear" maxlength="100" required></label>
+          <label>In this zone<select id="rule-zone" name="zone_id" required><option value="">Draw a zone first</option></select></label>
+          <label>Watch for classes<input id="rule-classes" name="classes" placeholder="person, car, truck" required></label>
+          <div id="class-chips" class="class-chips" aria-label="Classes available in this source"></div><p class="help class-help">Comma separated. Select a detected class above to add or remove it.</p>
+          <div class="form-pair"><label>When<select id="rule-condition" name="condition"><option value="dwell">Stays in zone</option><option value="enter">Enters zone</option><option value="absent">Is absent</option></select></label><label>For (seconds)<input id="rule-dwell" name="dwell_seconds" type="number" value="3" min="0" max="3600" step="0.5" required></label></div>
+          <label class="range-label"><span>Minimum confidence <output id="confidence-value" for="rule-confidence">50%</output></span><input id="rule-confidence" name="min_confidence" type="range" min="0.05" max="1" step="0.05" value="0.5"></label>
+          <details class="advanced"><summary>Advanced matching</summary><label>Object position<select id="rule-anchor" name="anchor"><option value="bottom_center">Feet / bottom center</option><option value="center">Box center</option><option value="overlap">Box overlap</option></select></label><label id="overlap-label" hidden>Minimum box overlap (%)<input id="rule-overlap" type="number" min="1" max="100" value="20" step="1"></label><label>Cooldown (seconds)<input id="rule-cooldown" name="cooldown_seconds" type="number" min="0" max="3600" step="1" value="10" required></label></details>
+          <label>Incident severity<select id="rule-severity" name="severity"><option value="info">Info</option><option value="warning" selected>Warning</option><option value="critical">Critical</option></select></label>
+          <div class="actions-box"><span class="field-label">THEN</span><span>▤ Create an incident ticket</span><label class="checkbox-label"><input id="rule-sound" type="checkbox"> Play an alert sound</label><label class="checkbox-label"><input id="rule-enabled" type="checkbox" checked> Rule enabled</label></div>
+          <p class="help" id="rule-context">Rules use detected classes and geometry. Review the evidence before acting.</p><div class="rule-buttons"><button class="button primary" id="save-rule" type="submit" disabled>Save rule <span aria-hidden="true">↗</span></button><button class="icon-button delete-button" id="delete-rule" type="button" title="Delete this rule" aria-label="Delete this rule" hidden>×</button></div><span id="save-state" class="save-state" aria-live="polite"></span>
+        </form>
+      </aside>
+    </div>
+
+    <section id="incident-section" class="panel incident-panel" aria-labelledby="incident-heading"><div class="panel-heading incident-heading"><div><span class="eyebrow">THE OUTPUT</span><h2 id="incident-heading">Incident inbox <span class="small-counter" id="incident-count">0</span></h2></div><div class="incident-filter" role="group" aria-label="Filter incidents"><button class="active" data-filter="all" type="button">All</button><button data-filter="open" type="button">Open <span id="open-count">0</span></button><button data-filter="resolved" type="button">Resolved</button></div></div><div id="incidents" class="incident-content"><div class="incident-empty"><span aria-hidden="true">◎</span><h3>Your rules are ready to notice.</h3><p>Play the source to evaluate objects and create incident tickets.</p></div></div><div class="incident-bottom"><span id="incident-summary">Incidents for the selected source</span><span>Detection → zone → rule → action</span></div></section>
+    <footer class="app-footer"><span>ZONELOGIC <span class="muted">/ VAST Builders Challenge</span></span><span>Spatial rules. Visible evidence. Human review.</span></footer>
+  </main>
+  <dialog id="evidence-dialog"><div class="dialog-heading"><h2>Incident evidence</h2><button class="icon-button" id="close-evidence" aria-label="Close evidence">×</button></div><img id="evidence-image" alt="Captured source with detected objects and zone boundaries"><p id="evidence-caption"></p></dialog>
+</body>
+</html>
